@@ -1,0 +1,75 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: telegramId (string)
+    // Fields:
+    //   - telegramId: string (required) - Unique Telegram ID
+    //   - name: string (optional) - User's name
+    //   - profiles: list (optional) - Array of profile objects
+    //   - settings: map (optional) - User settings
+    //
+    // Collection: receipts
+    // Document ID: receiptId (auto-generated)
+    // Fields:
+    //   - telegramId: string (required) - Owner's Telegram ID
+    //   - messageId: string (optional) - Telegram Message ID
+    //   - merchant: string (required) - Merchant name
+    //   - total: number (required) - Total amount
+    //   - currency: string (optional) - Currency
+    //   - date: string (optional) - Receipt date
+    //   - category: string (optional) - Expense category
+    //   - items: list (optional) - List of items
+    //   - fileUrl: string (optional) - URL to original file
+    //   - timestamp: timestamp (required) - Upload time
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(telegramId) {
+      return isAuthenticated() && (request.auth.uid == telegramId || request.auth.token.telegramId == telegramId);
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['telegramId']) &&
+             data.telegramId is string &&
+             (!('name' in data) || data.name is string) &&
+             (!('profiles' in data) || data.profiles is list) &&
+             (!('settings' in data) || data.settings is map);
+    }
+
+    function isValidReceipt(data) {
+      return data.keys().hasAll(['telegramId', 'merchant', 'total', 'timestamp']) &&
+             data.telegramId is string &&
+             data.merchant is string && data.merchant.size() > 0 && data.merchant.size() < 100 &&
+             data.total is number &&
+             data.timestamp is timestamp &&
+             (!('category' in data) || data.category is string) &&
+             (!('items' in data) || data.items is list) &&
+             (!('fileUrl' in data) || (data.fileUrl is string && data.fileUrl.matches("^https://.*")));
+    }
+
+    // Rules
+    match /users/{telegramId} {
+      allow read: if isOwner(telegramId);
+      allow create: if isAuthenticated() && isValidUser(request.resource.data) && isOwner(telegramId);
+      allow update: if isAuthenticated() && isValidUser(request.resource.data) && isOwner(telegramId);
+      allow delete: if isOwner(telegramId);
+    }
+
+    match /receipts/{receiptId} {
+      allow read: if isAuthenticated() && (resource.data.telegramId == request.auth.uid || resource.data.telegramId == request.auth.token.telegramId);
+      allow create: if isAuthenticated() && isValidReceipt(request.resource.data) && (request.resource.data.telegramId == request.auth.uid || request.resource.data.telegramId == request.auth.token.telegramId);
+      allow update: if isAuthenticated() && isValidReceipt(request.resource.data) && (resource.data.telegramId == request.auth.uid || resource.data.telegramId == request.auth.token.telegramId);
+      allow delete: if isAuthenticated() && (resource.data.telegramId == request.auth.uid || resource.data.telegramId == request.auth.token.telegramId);
+    }
+  }
+}

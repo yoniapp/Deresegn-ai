@@ -1,0 +1,5 @@
+{
+  "name": "ScanLogic AI Ledger",
+  "description": "Telegram-first AI ledger for documents, receipts, and form automation using Gemini 1.5 Flash.",
+  "requestFramePermissions": []
+}

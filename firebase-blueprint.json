@@ -1,0 +1,65 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and settings for ScanLogic Telegram Bot.",
+      "type": "object",
+      "properties": {
+        "telegramId": { "type": "string", "description": "Unique Telegram ID of the user." },
+        "name": { "type": "string", "description": "Name of the user from Telegram." },
+        "profiles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string", "description": "Profile name (e.g., Personal, Work)." },
+              "tin": { "type": "string", "description": "Tax Identification Number." },
+              "address": { "type": "string", "description": "Billing address." },
+              "email": { "type": "string", "description": "Email for forms." }
+            }
+          }
+        },
+        "settings": {
+          "type": "object",
+          "properties": {
+            "language": { "type": "string", "enum": ["en", "am"], "description": "Preferred language." },
+            "currency": { "type": "string", "description": "Preferred currency (e.g., ETB, USD)." }
+          }
+        }
+      },
+      "required": ["telegramId"]
+    },
+    "Receipt": {
+      "title": "Receipt",
+      "description": "Extracted data from a receipt photo or file.",
+      "type": "object",
+      "properties": {
+        "telegramId": { "type": "string", "description": "Telegram ID of the owner." },
+        "messageId": { "type": "string", "description": "Telegram Message ID for deep linking." },
+        "merchant": { "type": "string", "description": "Name of the merchant." },
+        "total": { "type": "number", "description": "Total amount spent." },
+        "currency": { "type": "string", "description": "Currency of the transaction." },
+        "date": { "type": "string", "format": "date", "description": "Date of the receipt." },
+        "category": { "type": "string", "description": "Expense category (e.g., Food, Rent)." },
+        "items": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of items on the receipt."
+        },
+        "fileUrl": { "type": "string", "description": "URL to the original image/file." },
+        "timestamp": { "type": "string", "format": "date-time", "description": "When it was uploaded." }
+      },
+      "required": ["telegramId", "merchant", "total"]
+    }
+  },
+  "firestore": {
+    "/users/{telegramId}": {
+      "schema": "User",
+      "description": "User profile and settings."
+    },
+    "/receipts/{receiptId}": {
+      "schema": "Receipt",
+      "description": "Scanned receipts."
+    }
+  }
+}
