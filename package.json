@@ -8,7 +8,10 @@
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "test-setup": "node test-setup.js",
+    "check-webhook": "curl http://localhost:3000/api/webhook-status",
+    "set-webhook": "curl http://localhost:3000/api/set-webhook"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
